@@ -19,6 +19,7 @@ class Conncact(Info):
     personInfo=[]
     tagContList=[]
     contDict={}
+    noneList=[]
     contDict.update(dict(JSON.parse(conTemp)))
     tagDict={'{{systemDefault':['{{Everyone']}
     def __init__(self,name,phone,email,tag,remarks):
@@ -58,22 +59,28 @@ class Conncact(Info):
         else:
             return Conncact.phone_check(self)
     def tagCont_edit():
-        tagCont=input("Input tag Contant:") 
-        Conncact.tagContList.append(tagCont)
-        if Conncact.continue_Judge()==True:
+        tagCont=input("Input tag Contant:")
+        if tagCont=="":
             return Conncact.tagCont_edit()
-        else:
-            return Conncact.tagContList    
+        else: 
+            Conncact.tagContList.append(tagCont)
+            if Conncact.continue_Judge()==True:
+                return Conncact.tagCont_edit()
+            else:
+                return Conncact.tagContList    
     def tag_edit(self):
         tagClass=input("Input the tag:")
-        tagTemp={tagClass:Conncact.tagCont_edit()}
-        Conncact.tagContList=[]
-        Conncact.tagDict.update(tagTemp)
-        print("Whether to add a new tag?")
-        if Conncact.continue_Judge()==True:
+        if tagClass=="":
             return Conncact.tag_edit(self)
         else:
-            return Conncact.tagDict
+            tagTemp={tagClass:Conncact.tagCont_edit()}
+            Conncact.tagContList=[]
+            Conncact.tagDict.update(tagTemp)
+            print("Whether to add a new tag?")
+            if Conncact.continue_Judge()==True:
+                return Conncact.tag_edit(self)
+            else:
+                return Conncact.tagDict
     def itemdel(self,list1):
         item=int(input("Which part to delet(Input number of part):"))
         if item in range(1,len(list1)+1):
@@ -86,7 +93,7 @@ class Conncact(Info):
         self.e=Conncact.eamil_check(self)
         self.t=Conncact.tag_edit(self)
         self.r=input("Input remark:")
-        cont={self.n:{f'Name':self.n,'Phone-num':self.p,'Email':self.e,'Tag':self.t,'Reamrk':self.r}}
+        cont={self.n:{f'Name':self.n,'Phone-num':self.p,'Email':self.e,'Tag':self.t,'Remark':self.r}}
         Conncact.contDict.update(cont)
         f=open("C:\connect\connect.txt","w+")
         f.write(str(Conncact.contDict))
@@ -184,9 +191,13 @@ class Conncact(Info):
         for name in Conncact.contDict:
             Conncact.infoList(self,name)
             tagDict=self.t
-            for contant in tagDict[tagtype]:
-                if contant not in tagList:
-                    tagList.append(contant)
+            if tagtype in self.t:
+                for contant in tagDict[tagtype]:
+                    if contant not in tagList:
+                        tagList.append(contant)
+            else:
+                if name not in Conncact.noneList:
+                    Conncact.noneList.append(name)          
         return tagList
     def tagtypeGet(self):
         tagtypeList=[]
@@ -202,8 +213,13 @@ class Conncact(Info):
         for name in Conncact.contDict:
             Conncact.infoList(self,name)
             tagDict=self.t
-            if tagCont in tagDict[tagtype]:
-                nameList.append(name)
+            if tagtype in tagDict:
+                if tagCont in tagDict[tagtype]:
+                    nameList.append(name)
+            else:
+                if name not in Conncact.noneList:
+                    Conncact.noneList.append(name)
+                        
         return nameList
     def tagClassify(self,tagtype):
         for tagCont in Conncact.tagGet(self,tagtype):
@@ -211,17 +227,64 @@ class Conncact(Info):
             for name in Conncact.taggfilter(self,tagtype,tagCont):
                 Conncact.printInfo(self,name)    
                 print()    
+        print("None:")
+        for name in Conncact.noneList:
+            Conncact.printInfo(self,name)
+            print()
     def filterPrint(self,tagtype,tagCont):
         nameList=Conncact.taggfilter(self,tagtype,tagCont)
         print(tagCont)
         for name in nameList:
             Conncact.printInfo(self,name)
-            print()
-    
+            print()   
+    def tagClass_get(self):
+        tagClassList=[]
+        for name in Conncact.contDict:
+            for tagClass in Conncact.contDict[name]['Tag']:
+                if tagClass not in tagClassList:
+                    tagClassList.append(tagClass)
+        return tagClassList                   
+    def tag_input(self):
+        tagClass=input("Input the tag:")
+        tagClassList=Conncact.tagClass_get(self)
+        if tagClass not  in tagClassList:
+            print("No such tag")
+            return Conncact.tag_input(self)
+        else:
+            tagTemp={tagClass:Conncact.tagCont_edit()}
+            Conncact.tagContList=[]
+            Conncact.tagDict.update(tagTemp)
+            print("Whether to add a new tag?")
+            if Conncact.continue_Judge()==True:
+                return Conncact.tag_input(self)
+            else:
+                return Conncact.tagDict
+    def multiFilter(self):
+        tagList=[]
+        tagDict=Conncact.tag_input(self)
+        tagDict.pop('{{systemDefault')
+        tagList=tagDict
+        nameset=[]
+        for tag in tagList:
+            tagList[tag]
+            for tagCont in tagList[tag]:
+                set1=set(Conncact.taggfilter(self,tag,tagCont))
+                nameset.append(set1)
+        return nameset        
             
-                
+    def multifilterPrint(self):
+        nameset=Conncact.multiFilter(self)
+        set1=nameset.pop(0)
+        nameList=list(set1.intersection(*nameset))
+        if nameList!=[]:
+            for name in nameList:
+                Conncact.printInfo(self,name)
+                print()        
+        else:
+            print("None")        
 con1=Conncact(1,1,1,1,1)
 con1.filterPrint('Location','China') 
+con1.output()
+con1.multifilterPrint()
 
-   
     
